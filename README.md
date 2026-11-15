@@ -1,4 +1,4 @@
-# T1 — Stallion Biomechanics (CPSC 4430/6430, Checkpoint 2)
+# T1: Stallion Biomechanics (CPSC 4430/6430, Checkpoint 2)
 
 PosePAL (test-time optimization inside a frozen CoTracker3 point tracker)
 applied to stallion biomechanics: dense tracks for 28 custom landmarks
