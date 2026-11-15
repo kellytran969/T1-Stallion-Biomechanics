@@ -1,8 +1,8 @@
-# Annotation Guide — T1 Checkpoint 2
+# Annotation Guide: T1 Checkpoint 2
 
 How the group produces the sparse manual annotations that PosePAL's
 test-time optimization (TTO) and the held-out scoring depend on.
-Protocol per the Checkpoint 1 plan (which scored 100 — do not change it
+Protocol per the Checkpoint 1 plan (which scored 100, do not change it
 without telling the whole group).
 
 ## What we annotate
@@ -11,14 +11,14 @@ without telling the whole group).
   Landmark names/indices still need one confirmation pass against Sam's
   endpoint scheme / the DLC CSV columns before annotating real clips.
 - One CSV per clip, copied from `annotation/annotations_template.csv`.
-  Columns: `frame,keypoint,x,y,visible` — pixel coordinates in the
+  Columns: `frame,keypoint,x,y,visible`, pixel coordinates in the
   original frame, `visible` = 1 or 0. This maps directly onto PosePAL's
   keypoint format (x, y, frame, id) in `main.py`.
 
 ## Which frames (per clip)
 
 1. **Frame 0 (first frame): all 28 landmarks.** These are the query
-   points PosePAL starts from. Take your time — every track depends on
+   points PosePAL starts from. Take your time, every track depends on
    this frame.
 2. **Correction frames: every ~10th frame (10, 20, 30, …), all 28
    landmarks.** These are fed to TTO as supervision.
