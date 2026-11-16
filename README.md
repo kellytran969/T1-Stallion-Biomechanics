@@ -33,8 +33,19 @@ pip install -r code/requirements.txt
 
 ## Data
 
-- Stallion clips: TODO, source, clip IDs (clip-01 …), horse IDs, counts.
-  Split by horse (otherwise by whole clip); split manifest: TODO path.
+- Stallion clips (decided Nov 16, announced to the group with a swap
+  window to Monday noon):
+  - clip-01 (demo clip; endpoints and phases): "Stallion Collection",
+    UNL Equine Reproduction, https://mediahub.unl.edu/media/22826
+    Working segment: t = 83.0 to 100.0 s of the source (510 frames,
+    1280x720, 29.97 fps), the one continuous full-profile shot of the
+    stallion mounted on the phantom. See data/clip-01/SEGMENT_NOTES.md
+    in the project files for the shot analysis and annotation sets.
+  - clip-02 (second horse): "Stallion Semen Collection", Candlewood
+    Equine, https://www.youtube.com/watch?v=JdhKsA-T8Lc
+  - Split by horse (clip-01 and clip-02 are different stallions);
+    within clip-01, correction frames and blind scoring frames are
+    interleaved and kept in separate files (no leakage).
 - Paper datasets for the tracking reproduction: DAVIS-Animals,
   DeepFly3D (links in the Checkpoint 1 report).
 - Annotations: one `<clip>_annotations.csv` (frame 0 + corrections) and
