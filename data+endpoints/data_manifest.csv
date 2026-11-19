@@ -1,6 +1,6 @@
 clip_id,horse_id,video_source,start_time,end_time,fps,width,height,annotation_file,scoring_file,split
-clip-01,Horse 1,https://mediahub.unl.edu/media/22826,83,100,29.97,1280,720,,,
-clip-02,Horse 2,https://www.youtube.com/watch?v=JdhKsA-T8Lc,,,,,,,,
-clip-03,Horse 3,https://www.youtube.com/watch?v=m15Yi0Wf52o,,,,,,,,
-clip-04,Horse 4,https://www.youtube.com/watch?v=W1k4gj4QdwU,,,,,,,,
-clip-05,Horse 5,https://www.youtube.com/watch?v=_d6ZhGT0bW0,,,,,,,,
+clip-01,horse-01,https://mediahub.unl.edu/media/22826,83,100,29.97,1280,720,,,training
+clip-02,horse-02,https://www.youtube.com/watch?v=JdhKsA-T8Lc,,,,,,,,training
+clip-03,horse-03,https://www.youtube.com/watch?v=m15Yi0Wf52o,,,,,,,,development
+clip-04,horse-04,https://www.youtube.com/watch?v=W1k4gj4QdwU,,,,,,,,backup
+clip-05,horse-05,https://www.youtube.com/watch?v=_d6ZhGT0bW0,,,,,,,,held-out evaluation
