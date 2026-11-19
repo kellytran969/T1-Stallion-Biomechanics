@@ -1,5 +1,17 @@
 import math
 import pandas as pd
+import csv
+
+KEYPOINT_MAP = {
+    "4": "poll",
+    "7": "withers",
+    "10": "croup",
+    "18": "pelvis",
+    "22": "hind_hoof",
+    "11": "chest",
+    "D1": "dummy_d1",
+    "D2": "dummy_d2"
+}
 
 def distance(point1, point2):
     """
@@ -135,9 +147,9 @@ def calculate_endpoints(landmarks, direction=None):
 
         dummy_length = distance(dummy_d1, dummy_d2)
 
-        if dummy_length != 0: horizontal_offset = (dummy_d1[0] - chest[0]) * direction
-
-        results["chest_position"] = (horizontal_offset / dummy_length)
+        if dummy_length != 0:
+            horizontal_offset = (dummy_d1[0] - chest[0]) * direction
+            results["chest_position"] = horizontal_offset / dummy_length
 
     return results
 
@@ -148,18 +160,18 @@ def process_tracking_csv(input_file, output_file):
     and save the results to a new CSV.
 
     Expected columns:
-        frame, landmark, x, y
+        frame, keypoint, x, y, visible
     """
 
     # Read the tracking data
-    tracking_data = pd.read_csv(input_file)
+    tracking_data = pd.read_csv(input_file, dtype={"keypoint": str})
 
     # Check that required columns exist
-    required_columns = {"frame", "landmark", "x", "y"}
+    required_columns = {"frame", "keypoint", "x", "y", "visible"}
 
     if not required_columns.issubset(tracking_data.columns):
         raise ValueError(
-            "CSV must contain: frame, landmark, x, y"
+            "CSV must contain: frame, keypoint, x, y, visible"
         )
 
     all_results = []
@@ -171,10 +183,23 @@ def process_tracking_csv(input_file, output_file):
         landmarks = {}
 
         for _, row in frame_data.iterrows():
-            landmarks[row["landmark"]] = (
-                row["x"],
-                row["y"]
-            )
+
+            keypoint_id = row["keypoint"]
+
+            # Convert keypoint ID into landmark name
+            if keypoint_id not in KEYPOINT_MAP:
+                continue
+
+            landmark_name = KEYPOINT_MAP[keypoint_id]
+
+            # Only use visible landmarks
+            if row["visible"] == 1:
+                landmarks[landmark_name] = (
+                    row["x"],
+                    row["y"]
+                )
+            else:
+                landmarks[landmark_name] = None
 
         # Calculate the four endpoints
         results = calculate_endpoints(landmarks)
@@ -200,50 +225,6 @@ def process_tracking_csv(input_file, output_file):
     print(results_df.head())
 
 if __name__ == "__main__":
-    # Test all four endpoints with made-up coordinates
-    left_example_landmarks = {
-        "poll": (100, 200),
-        "withers": (300, 250),
-        "croup": (500, 270),
-        "pelvis": (450, 280),
-        "hind_hoof": (400, 400),
-        "chest": (150, 300),
-        "dummy_d1": (50, 300),
-        "dummy_d2": (50, 500)
-    }
-
-    left_results = calculate_endpoints(left_example_landmarks)
-
-    print("\nLeft-Facing Endpoint Results:")
-    for name, value in left_results.items():
-        print(name, ":", value)
-
-    right_example_landmarks = {
-        "poll": (500, 200),
-        "withers": (300, 250),
-        "croup": (100, 270),
-        "pelvis": (150, 280),
-        "hind_hoof": (200, 400),
-        "chest": (450, 300),
-        "dummy_d1": (550, 300),
-        "dummy_d2": (550, 500)
-    }
-
-    right_results = calculate_endpoints(right_example_landmarks)
-
-    print("\nRight-Facing Endpoint Results:")
-    for name, value in right_results.items():
-        print(name, ":", value)
-
-    missing_example_landmarks = left_example_landmarks.copy()
-    missing_example_landmarks["hind_hoof"] = None
-
-    missing_results = calculate_endpoints(missing_example_landmarks)
-
-    print("\nMissing Landmark Test:")
-    for name, value in missing_results.items():
-        print(name, ":", value)
-
     process_tracking_csv(
         "test_tracking.csv",
         "test_endpoints.csv"
