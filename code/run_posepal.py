@@ -12,6 +12,7 @@ import csv
 import math
 import sys
 from pathlib import Path
+from endpoints import process_tracking_csv
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -239,3 +240,8 @@ if __name__ == '__main__':
     except (ValueError, FileNotFoundError, RuntimeError, ImportError) as exc:
         print(f'Error: {exc}', file=sys.stderr)
         sys.exit(1)
+
+    process_tracking_csv(
+        "test_tracking.csv",
+        "test_endpoints.csv"
+    )
