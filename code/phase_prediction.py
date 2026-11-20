@@ -12,14 +12,13 @@ with reviewed, zero-based frames and approach/mount/thrust/dismount labels.
 Training tunes a pose-only and/or temporal random forest on validation clips.
 It saves the best estimator for each requested variant, fitted on TRAIN ONLY.
 No held-out test set is read. Validation F1 is model-selection evidence only.
+Training can use any nonempty subset of the four phases. A model can predict
+only phases present in training; its validation score averages over the union
+of phases present in train or validation, using zero for undefined F1 scores.
+Warnings and the JSON report identify absent phases and validation support.
 Prediction writes frame,phase for overlay_demo.py; unknown means no endpoints
 were available in that frame, and is not a fifth trained class.
 
-Examples (run from repository root):
- python code/phase_prediction.py train --manifest phase_manifest.csv --model-dir results/phase_models --variant both
- python code/phase_prediction.py predict --model results/phase_models/temporal.joblib --endpoints results/clip-01_endpoints.csv --out results/clip-01_phases.csv
-
-joblib model files may execute code when loaded: load only trusted models.
 """
 import argparse
 import json
@@ -172,12 +171,20 @@ def load_split(manifest, base, variant, lag):
 def train_variant(manifest, base, variant, lag, model_dir, seed):
     splits = load_split(manifest, base, variant, lag)
     Xtr, ytr = splits['train']; Xval, yval = splits['val']
-    missing_classes = sorted(set(CLASSES) - set(ytr))
+    trained_classes = [name for name in CLASSES if name in set(ytr)]
+    validation_classes = [name for name in CLASSES if name in set(yval)]
+    missing_classes = [name for name in CLASSES if name not in trained_classes]
+    missing_val = [name for name in trained_classes if name not in validation_classes]
+    unseen_val = [name for name in validation_classes if name not in trained_classes]
+    score_classes = [name for name in CLASSES if name in set(ytr) | set(yval)]
     if missing_classes:
-        raise ValueError(f'Training set is missing phase labels: {missing_classes}. Collect reviewed training labels for all four phases.')
-    missing_val = sorted(set(CLASSES) - set(yval))
+        warnings.warn(f'Training lacks {missing_classes}; the model cannot predict those phases.')
+    if len(trained_classes) == 1:
+        warnings.warn('Training has only one phase; predictions are constant when endpoint features are available.')
+    if unseen_val:
+        warnings.warn(f'Validation includes {unseen_val}, which the model cannot predict because training lacks them.')
     if missing_val:
-        warnings.warn(f'Validation set has no examples of {missing_val}; macro F1 counts missing classes as zero and cannot establish their performance.')
+        warnings.warn(f'Validation lacks {missing_val}; their F1 is counted as zero and their performance is not established.')
     grid = {'n_estimators': [100, 200], 'max_depth': [None, 12],
             'min_samples_leaf': [1, 5], 'max_features': ['sqrt', 1.0]}
     best, rows = None, []
@@ -186,24 +193,27 @@ def train_variant(manifest, base, variant, lag, model_dir, seed):
                              ('forest', RandomForestClassifier(**params, class_weight='balanced', random_state=seed, n_jobs=1))])
         pipeline.fit(Xtr, ytr)
         pred = pipeline.predict(Xval)
-        score = f1_score(yval, pred, labels=CLASSES, average='macro', zero_division=0)
-        rows.append({'validation_macro_f1_all_four': float(score), **params})
+        score = f1_score(yval, pred, labels=score_classes, average='macro', zero_division=0)
+        rows.append({'validation_macro_f1_scored_classes': float(score), **params})
         if best is None or score > best[0]:
             best = (score, params, pipeline, pred)
     score, params, model, pred = best
     model_dir.mkdir(parents=True, exist_ok=True)
     model_path = model_dir / (variant + '.joblib')
     joblib.dump({'model': model, 'variant': variant, 'lag': lag,
-                 'columns': list(Xtr.columns), 'classes': CLASSES}, model_path)
+                 'columns': list(Xtr.columns), 'classes': trained_classes}, model_path)
     results = {'variant': variant, 'lag_frames': lag, 'training_frames': len(ytr),
                'validation_frames': len(yval), 'training_classes': ytr.value_counts().to_dict(),
                'validation_classes': yval.value_counts().to_dict(),
-               'best_validation_macro_f1_all_four': float(score), 'best_params': params,
-               'classification_report_validation': classification_report(yval, pred, labels=CLASSES, output_dict=True, zero_division=0),
-               'note': 'Validation was used for tuning. This is not held-out test performance. Model fitted on training data only.',
+               'trained_classes': trained_classes, 'untrained_classes': missing_classes,
+               'validation_present_classes': validation_classes, 'validation_unseen_classes': unseen_val,
+               'validation_missing_trained_classes': missing_val, 'macro_f1_classes': score_classes,
+               'best_validation_macro_f1_scored_classes': float(score), 'best_params': params,
+               'classification_report_validation': classification_report(yval, pred, labels=score_classes, output_dict=True, zero_division=0),
+               'note': 'Macro F1 averages classes present in training or validation (undefined F1=0). Validation was used for tuning; it is not held-out test performance. Model fitted on training data only.',
                'grid_results': rows}
     (model_dir / (variant + '_validation.json')).write_text(json.dumps(results, indent=2), encoding='utf-8')
-    print(f'{variant}: best validation macro F1 (all four classes) = {score:.4f}; saved {model_path}')
+    print(f'{variant}: scored classes {score_classes}; best validation macro F1 = {score:.4f}; saved {model_path}')
 
 
 def predict(args):
@@ -221,6 +231,76 @@ def predict(args):
     print(f'Wrote {args.out}; {int((~valid).sum())} frames marked unknown because all endpoints were missing')
 
 
+def template_rules(path):
+    # Illustrative numeric cutoffs are invented solely to demonstrate syntax.
+    config = {'example_only': True, 'lag_frames': 1,
+              'note': 'EXAMPLE ONLY: values are arbitrary, not biological thresholds. Review rules and set example_only to false before research use.',
+              'rules': [
+                  {'phase': 'approach', 'all': [{'feature': 'back_angle', 'op': '<', 'value': -10}]},
+                  {'phase': 'mount', 'all': [{'feature': 'back_angle', 'op': '<', 'value': 0}]},
+                  {'phase': 'thrust', 'all': [{'feature': 'back_angle', 'op': '<', 'value': 10}]},
+                  {'phase': 'dismount', 'all': [{'feature': 'back_angle', 'op': '>=', 'value': 10}]}]}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('x', encoding='utf-8') as f:
+        json.dump(config, f, indent=2)
+        f.write('\n')
+    print(f'Wrote illustrative, unvalidated rules to {path}; edit before use')
+
+
+def rule_predictions(df, config):
+    if not isinstance(config, dict) or not isinstance(config.get('rules'), list) or not config['rules']:
+        raise ValueError('Rule config needs a nonempty rules list')
+    lag = config.get('lag_frames', 1)
+    if isinstance(lag, bool) or not isinstance(lag, int) or lag < 1:
+        raise ValueError('Rule lag_frames must be a positive integer')
+    X = make_features(df, 'temporal', lag)
+    # Make the possible inputs explicit; visibility indicators are not phase labels.
+    allowed = set(FEATURES + [c + '_delta' for c in FEATURES])
+    ops = {'<': lambda x, v: x < v, '<=': lambda x, v: x <= v,
+           '>': lambda x, v: x > v, '>=': lambda x, v: x >= v}
+    for rule in config['rules']:
+        if not isinstance(rule, dict) or rule.get('phase') not in CLASSES:
+            raise ValueError('Each rule needs a valid phase')
+        conditions = rule.get('all')
+        if not isinstance(conditions, list) or not conditions:
+            raise ValueError('Each rule needs at least one condition in all')
+        for cond in conditions:
+            if not isinstance(cond, dict) or cond.get('feature') not in allowed or cond.get('op') not in ops:
+                raise ValueError('Invalid rule feature or operator')
+            value = cond.get('value')
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value):
+                raise ValueError('Rule thresholds must be finite numbers')
+    outputs = []
+    for _, row in X.iterrows():
+        chosen = 'unknown'
+        for rule in config['rules']:
+            states = []
+            for cond in rule['all']:
+                value = row[cond['feature']]
+                states.append(None if pd.isna(value) else ops[cond['op']](value, cond['value']))
+            if False in states:
+                continue
+            if None in states:
+                # Do not use a lower-priority rule when a higher-priority rule
+                # could have matched if its missing feature were observed.
+                break
+            chosen = rule['phase']
+            break
+        outputs.append(chosen)
+    return outputs
+
+
+def run_rules(args):
+    config = json.loads(args.config.read_text(encoding='utf-8'))
+    if config.get('example_only') is not False:
+        raise ValueError('Rules are example-only or unreviewed. Review and edit the config, then explicitly set example_only to false.')
+    df = read_endpoints(args.endpoints)
+    phase = rule_predictions(df, config)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({'frame': df['frame'], 'phase': phase}).to_csv(args.out, index=False)
+    print(f'Wrote {args.out}; {phase.count("unknown")} frames unknown (missing data or no matching rule)')
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='command', required=True)
@@ -234,6 +314,12 @@ def main():
     pr.add_argument('--model', type=Path, required=True)
     pr.add_argument('--endpoints', type=Path, required=True)
     pr.add_argument('--out', type=Path, required=True)
+    rt = sub.add_parser('rules-template', help='Create an illustrative JSON rules file (review before use)')
+    rt.add_argument('--out', type=Path, required=True)
+    rule = sub.add_parser('rules', help='Apply reviewed human-defined rules to one endpoint CSV')
+    rule.add_argument('--endpoints', type=Path, required=True)
+    rule.add_argument('--config', type=Path, required=True)
+    rule.add_argument('--out', type=Path, required=True)
     args = ap.parse_args()
     if args.command == 'train':
         if args.lag < 1: raise ValueError('lag must be positive')
@@ -241,8 +327,12 @@ def main():
         variants = ['pose', 'temporal'] if args.variant == 'both' else [args.variant]
         for variant in variants:
             train_variant(manifest, args.manifest.resolve().parent, variant, args.lag, args.model_dir, args.seed)
-    else:
+    elif args.command == 'predict':
         predict(args)
+    elif args.command == 'rules-template':
+        template_rules(args.out)
+    else:
+        run_rules(args)
 
 
 if __name__ == '__main__':
