@@ -212,9 +212,16 @@ def process_tracking_csv(input_file, output_file):
     # Convert results into a DataFrame
     results_df = pd.DataFrame(all_results)
 
-    # Put frame first
+    # Match the column names expected by overlay_demo.py
+    results_df = results_df.rename(columns={
+        "back_angle": "theta_back_deg",
+        "neck_angle": "theta_neck_deg",
+        "hind_position": "hind_norm",
+        "chest_position": "chest_norm"
+    })
+
     results_df = results_df[
-        ["frame", "back_angle", "neck_angle", "hind_position", "chest_position"]
+        ["frame", "theta_back_deg", "theta_neck_deg", "hind_norm", "chest_norm"]
     ]
 
     # Save results
