@@ -12,7 +12,6 @@ import csv
 import math
 import sys
 from pathlib import Path
-from endpoints import process_tracking_csv
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,6 +22,7 @@ def arguments():
     parser.add_argument('--annotations', required=True, type=Path)
     parser.add_argument('--method', choices=('frozen', 'tto'), required=True)
     parser.add_argument('--out', required=True, type=Path)
+    parser.add_argument('--endpoints-out', type=Path, default=None, help='Optional endpoint CSV output')
     parser.add_argument('--cotracker-dir', type=Path, default=ROOT / 'external/PosePAL/dependencies/cotracker3')
     parser.add_argument('--checkpoint', type=Path, default=None)
     parser.add_argument('--device', choices=('auto', 'cpu', 'cuda', 'mps'), default='auto')
@@ -61,9 +61,6 @@ def load_annotations(path, nframes, width, height):
                 raise ValueError(f'Invalid annotation at CSV line {line}: {exc}') from exc
     if not points:
         raise ValueError('Annotations file contains no points')
-    empty = [key for key, values in points.items() if not values]
-    if empty:
-        raise ValueError('No visible annotation for keypoint(s): ' + ', '.join(empty))
     for values in points.values():
         values.sort()
     return points
@@ -106,6 +103,24 @@ def feature_pyramid(model, video, chunk, torch, F):
     return pyramid
 
 
+def write_tracks(path, tracks, visible, ids, all_ids):
+    """Write predicted tracks and explicitly invisible untrackable points."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    positions = {key: i for i, key in enumerate(ids)}
+    with path.open('w', newline='', encoding='utf-8') as stream:
+        writer = csv.writer(stream)
+        writer.writerow(['frame', 'keypoint', 'x', 'y', 'visible'])
+        for f in range(len(tracks)):
+            for key in all_ids:
+                if key not in positions:
+                    # Numeric placeholders are ignored when visible=0; the existing
+                    # overlay and correction selector require finite coordinates.
+                    writer.writerow([f, key, 0, 0, 0])
+                else:
+                    i = positions[key]
+                    writer.writerow([f, key, float(tracks[f, i, 0]), float(tracks[f, i, 1]), int(visible[f, i])])
+
+
 def main():
     args = arguments()
     if args.iters < 1 or args.lr <= 0 or args.final_lr <= 0 or args.feature_chunk < 1:
@@ -139,8 +154,14 @@ def main():
     if width < 2 or height < 2 or any(frame.shape != raw[0].shape for frame in raw):
         raise ValueError('Video frames must all have the same dimensions, at least 2 x 2')
     labels = load_annotations(args.annotations, len(raw), width, height)
-    ids = list(labels)
-    print(f'Loaded {len(raw)} frames and {len(ids)} keypoints', flush=True)
+    all_ids = list(labels)
+    ids = [key for key in all_ids if labels[key]]
+    unavailable = [key for key in all_ids if not labels[key]]
+    if not ids:
+        raise ValueError('No keypoints have a visible annotation; at least one is needed to track.')
+    print(f'Loaded {len(raw)} frames and {len(ids)} trackable keypoints', flush=True)
+    if unavailable:
+        print('No visible annotation; marked invisible in every frame: ' + ', '.join(unavailable), flush=True)
     model = CoTrackerThreeOffline(stride=4, corr_radius=3, window_len=60,
                                   model_resolution=(384, 512), linear_layer_for_vis_conf=True)
     state = torch.load(str(checkpoint), map_location='cpu', weights_only=True)
@@ -224,14 +245,13 @@ def main():
         visible[:f, i] = False
     if not np.isfinite(tracks).all():
         raise RuntimeError('Tracker produced non-finite coordinates; no CSV was written')
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    with args.out.open('w', newline='', encoding='utf-8') as stream:
-        writer = csv.writer(stream)
-        writer.writerow(['frame', 'keypoint', 'x', 'y', 'visible'])
-        for f in range(len(tracks)):
-            for i, key in enumerate(ids):
-                writer.writerow([f, key, float(tracks[f, i, 0]), float(tracks[f, i, 1]), int(visible[f, i])])
+    write_tracks(args.out, tracks, visible, ids, all_ids)
     print(f'Wrote {args.out}', flush=True)
+    if args.endpoints_out is not None:
+        sys.path.insert(0, str(ROOT / 'data+endpoints'))
+        from endpoints import process_tracking_csv
+        args.endpoints_out.parent.mkdir(parents=True, exist_ok=True)
+        process_tracking_csv(str(args.out), str(args.endpoints_out))
 
 
 if __name__ == '__main__':
@@ -241,7 +261,3 @@ if __name__ == '__main__':
         print(f'Error: {exc}', file=sys.stderr)
         sys.exit(1)
 
-    process_tracking_csv(
-        "test_tracking.csv",
-        "test_endpoints.csv"
-    )
