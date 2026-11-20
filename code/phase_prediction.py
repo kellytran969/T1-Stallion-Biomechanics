@@ -8,6 +8,9 @@ Endpoint CSV: frame,back_angle,neck_angle,hind_position,chest_position, as
 produced by data+endpoints/endpoints.py. Alternate overlay column names are
 accepted. Labels CSV: frame,phase OR start_frame,end_frame,phase (inclusive),
 with reviewed, zero-based frames and approach/mount/thrust/dismount labels.
+The label 'other' is treated as unlabeled and excluded from training and scoring.
+Use the four --clip-NN-endpoints options to train on clips 01, 02, 07 and
+validate on 03. Paths in this mode are relative to the current directory.
 
 Training tunes a pose-only and/or temporal random forest on validation clips.
 It saves the best estimator for each requested variant, fitted on TRAIN ONLY.
@@ -19,6 +22,18 @@ Warnings and the JSON report identify absent phases and validation support.
 Prediction writes frame,phase for overlay_demo.py; unknown means no endpoints
 were available in that frame, and is not a fifth trained class.
 
+Rule-based control: `rules-template --out rules.json` creates illustrative,
+UNVALIDATED rules. Edit thresholds and rules based on training data or a
+documented protocol, then set "example_only" to false after review.
+`rules --endpoints ... --config rules.json --out ...` applies ordered rules.
+First matching rule wins; missing values that prevent deciding an earlier
+rule produce unknown. No threshold is a validated biological boundary.
+
+Examples (run from repository root):
+ python code/phase_prediction.py train --manifest phase_manifest.csv --model-dir results/phase_models --variant both
+ python code/phase_prediction.py predict --model results/phase_models/temporal.joblib --endpoints results/clip-01_endpoints.csv --out results/clip-01_phases.csv
+
+joblib model files may execute code when loaded: load only trusted models.
 """
 import argparse
 import json
@@ -85,8 +100,10 @@ def read_labels(path, frames):
     if 'phase' not in labels:
         raise ValueError(f'{path}: expected phase column')
     labels['phase'] = labels['phase'].astype('string').str.strip().str.lower()
-    if labels['phase'].isna().any() or not labels['phase'].isin(CLASSES).all():
-        raise ValueError(f'{path}: labels must be one of {CLASSES}')
+    # 'other' is unlabelled: it is never learned or evaluated as a phase.
+    if labels['phase'].isna().any() or not labels['phase'].isin(CLASSES + ['other']).all():
+        raise ValueError(f'{path}: labels must be one of {CLASSES} or other')
+    labels['phase'] = labels['phase'].replace({'other': None})
     allowed = set(frames)
     output = {}
     def integer(value):
@@ -328,7 +345,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='command', required=True)
     tr = sub.add_parser('train', help='Tune models with separate train and validation groups')
-    tr.add_argument('--manifest', type=Path, required=True)
+    tr.add_argument('--manifest', type=Path, help='Optional custom manifest; paths resolve relative to it')
+    for number in ('01', '02', '07', '03'):
+        tr.add_argument(f'--clip-{number}-endpoints', type=Path, help=f'Endpoint CSV for clip-{number}')
+        tr.add_argument(f'--clip-{number}-labels', type=Path, default=Path(f'data/clip-{number}/clip-{number}_phases.csv'))
+        tr.add_argument(f'--clip-{number}-group', default=f'horse-{number}', help='Actual horse/group ID; must not overlap across splits')
     tr.add_argument('--model-dir', type=Path, required=True)
     tr.add_argument('--variant', choices=['pose', 'temporal', 'both'], default='both')
     tr.add_argument('--lag', type=int, default=1, help='Temporal difference lag in frames')
@@ -346,10 +367,30 @@ def main():
     args = ap.parse_args()
     if args.command == 'train':
         if args.lag < 1: raise ValueError('lag must be positive')
-        manifest = read_manifest(args.manifest)
+        if args.manifest:
+            if any(getattr(args, f'clip_{n}_endpoints') is not None for n in ('01', '02', '07', '03')):
+                raise ValueError('Use either --manifest or the four clip endpoint arguments, not both')
+            manifest = read_manifest(args.manifest)
+            base = args.manifest.resolve().parent
+        else:
+            rows = []
+            for n in ('01', '02', '07', '03'):
+                ep = getattr(args, f'clip_{n}_endpoints')
+                if ep is None:
+                    raise ValueError(f'Missing --clip-{n}-endpoints (or provide --manifest)')
+                rows.append({'clip_id': f'clip-{n}', 'group_id': getattr(args, f'clip_{n}_group').strip(),
+                             'split': 'val' if n == '03' else 'train', 'endpoints': str(ep),
+                             'labels': str(getattr(args, f'clip_{n}_labels'))})
+            manifest = pd.DataFrame(rows)
+            if any(not g for g in manifest.group_id):
+                raise ValueError('Group IDs must not be empty')
+            if set(manifest.loc[manifest.split == 'train', 'group_id']) & set(manifest.loc[manifest.split == 'val', 'group_id']):
+                raise ValueError('Group leakage: a horse appears in both train and validation')
+            base = Path.cwd()
+            print('Training clips: 01, 02, 07; validation clip: 03')
         variants = ['pose', 'temporal'] if args.variant == 'both' else [args.variant]
         for variant in variants:
-            train_variant(manifest, args.manifest.resolve().parent, variant, args.lag, args.model_dir, args.seed)
+            train_variant(manifest, base, variant, args.lag, args.model_dir, args.seed)
     elif args.command == 'predict':
         predict(args)
     elif args.command == 'rules-template':
