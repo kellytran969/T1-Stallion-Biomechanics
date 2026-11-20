@@ -17,7 +17,7 @@ code in the submission ZIP)
 2. Frozen CoTracker3 baseline tracks, TODO (Stephen): command
 3. PosePAL TTO adaptation (qp_emb only; settings: TODO state steps / lr
    actually used), TODO (Stephen): command
-4. Endpoint measurements from tracks, TODO (Sam): command
+4. Endpoint measurements from tracks: connected to both TTO adaptation and Frozen CoTracker
 5. Phase prediction (rule-based + random forest), TODO (Jim): command
 6. Held-out evaluation on blind scoring frames, TODO (Jim): command
 7. Demo video render, `code/overlay_demo.py` (working, see below)
