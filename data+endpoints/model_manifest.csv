@@ -1,0 +1,5 @@
+clip_id,group_id,split,endpoints,labels
+clip-01,horse-01,train,Clip1tto_endpoints.csv,clip-01_phases.csv
+clip-02,horse-02,train,Clip2tto_endpoints.csv,clip-02_phases.csv
+clip-07,horse-07,train,Clip7tto_endpoints.csv,clip-07_phases.csv
+clip-03,horse-03,val,Clip3tto_endpoints.csv,clip-03_phases.csv
