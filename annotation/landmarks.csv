@@ -1,28 +1,28 @@
 id,group,role,name,notes
-1,horse,,nose/muzzle,Schematic position; confirm name/index against DLC CSV columns
-2,horse,,face/eye area,Schematic position; confirm with Sam
-3,horse,,ear,Schematic position; confirm with Sam
+1,horse,,nose/muzzle,Schematic position
+2,horse,,face/eye area,Schematic position
+3,horse,,ear,Schematic position
 4,horse,poll,top of head,Endpoint: theta_neck start (poll -> withers)
-5,horse,,throatlatch / neck underside,Schematic position; confirm with Sam
+5,horse,,throatlatch / neck underside,Schematic position
 6,horse,,neck (mid),Lies on the poll -> withers line in the schematic
 7,horse,withers,base of neck,Endpoint: theta_back start and L_torso start
 8,horse,,mid-back,On the withers -> croup line in the schematic
-9,horse,,back/rear (TBD),Not legible on the schematic; confirm with Sam
+9,horse,,back/rear (TBD),Not legible on the schematic
 10,horse,croup,rear top,Endpoint: theta_back end and L_torso end
 11,horse,chest,chest,Endpoint: chest offset vs D1
-12,horse,,belly (mid),Schematic position; confirm with Sam
-13,horse,,front leg top (shoulder),Schematic position; confirm with Sam
-14,horse,,front leg (knee/carpus),Schematic position; confirm with Sam
-15,horse,,front leg (fetlock),Schematic position; confirm with Sam
-16,horse,,front leg (pastern),Schematic position; confirm with Sam
-17,horse,,front hoof,Schematic position; confirm with Sam
+12,horse,,belly (mid),Schematic position
+13,horse,,front leg top (shoulder),Schematic position
+14,horse,,front leg (knee/carpus),Schematic position
+15,horse,,front leg (fetlock),Schematic position
+16,horse,,front leg (pastern),Schematic position
+17,horse,,front hoof,Schematic position
 18,horse,pelvis,hip/pelvis,Endpoint: hind-limb reference (pelvis vertical)
-19,horse,,hind leg (hock),Schematic position; confirm with Sam
-20,horse,,hind leg (fetlock),Schematic position; confirm with Sam
-21,horse,,hind leg (pastern),Schematic position; confirm with Sam
+19,horse,,hind leg (hock),Schematic position
+20,horse,,hind leg (fetlock),Schematic position
+21,horse,,hind leg (pastern),Schematic position
 22,horse,hind_hoof,hind hoof,Endpoint: hind-limb position under pelvis
-23,horse,,far front leg (fetlock),Schematic position; confirm with Sam
-24,horse,,far front hoof,Schematic position; confirm with Sam
+23,horse,,far front leg (fetlock),Schematic position
+24,horse,,far front hoof,Schematic position
 D1,dummy,dummy_D1,dummy top-left,Endpoint: L_dummy start and chest reference
 D2,dummy,dummy_D2,dummy top-right,Endpoint: L_dummy end
 D3,dummy,,dummy bottom-left,
