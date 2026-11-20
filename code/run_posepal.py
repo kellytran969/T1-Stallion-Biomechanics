@@ -233,7 +233,7 @@ def main():
                 track_feat_support_pyramid=features.repeat(model.corr_levels, 1, 1, 1, 1, 1))
 
     tracks = tracks[0].detach().cpu().numpy()
-    visible = (visibility[0] > 0.9).detach().cpu().numpy()
+    visible = (visibility[0] > 0.7).detach().cpu().numpy()
     tracks[..., 0] /= sx
     tracks[..., 1] /= sy
     # Ground-truth query coordinates are known; apply the same query correction
