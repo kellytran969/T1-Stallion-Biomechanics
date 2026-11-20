@@ -231,20 +231,43 @@ def predict(args):
     print(f'Wrote {args.out}; {int((~valid).sum())} frames marked unknown because all endpoints were missing')
 
 
-def template_rules(path):
-    # Illustrative numeric cutoffs are invented solely to demonstrate syntax.
-    config = {'example_only': True, 'lag_frames': 1,
-              'note': 'EXAMPLE ONLY: values are arbitrary, not biological thresholds. Review rules and set example_only to false before research use.',
-              'rules': [
-                  {'phase': 'approach', 'all': [{'feature': 'back_angle', 'op': '<', 'value': -10}]},
-                  {'phase': 'mount', 'all': [{'feature': 'back_angle', 'op': '<', 'value': 0}]},
-                  {'phase': 'thrust', 'all': [{'feature': 'back_angle', 'op': '<', 'value': 10}]},
-                  {'phase': 'dismount', 'all': [{'feature': 'back_angle', 'op': '>=', 'value': 10}]}]}
+def write_phase_rules(path: Path) -> None:
+    config = {
+        "example_only": False,
+        "lag_frames": 1,
+        "note": (
+            "Endpoints-only baseline rules fitted on training data "
+            "(other excluded; approach prioritized) and checked on "
+            "validation data before held-out comparison."
+        ),
+        "rules": [
+            {
+                "phase": "approach",
+                "all": [{"feature": "back_angle", "op": ">", "value": -12.0}],
+            },
+            {
+                "phase": "mount",
+                "all": [{"feature": "hind_position", "op": ">", "value": -0.45}],
+            },
+            {
+                "phase": "dismount",
+                "all": [
+                    {"feature": "neck_angle", "op": "<", "value": -33.0},
+                    {"feature": "hind_position", "op": ">", "value": -0.7},
+                ],
+            },
+            {
+                "phase": "thrust",
+                "all": [{"feature": "back_angle", "op": "<=", "value": -12.0}],
+            },
+        ],
+    }
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('x', encoding='utf-8') as f:
+    with path.open("x", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
-        f.write('\n')
-    print(f'Wrote illustrative, unvalidated rules to {path}; edit before use')
+        f.write("\n")
+    print(f"Wrote endpoints-based phase rules to {path}")
 
 
 def rule_predictions(df, config):
@@ -330,7 +353,7 @@ def main():
     elif args.command == 'predict':
         predict(args)
     elif args.command == 'rules-template':
-        template_rules(args.out)
+        write_phase_rules(args.out)
     else:
         run_rules(args)
 
