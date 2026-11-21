@@ -7,8 +7,9 @@ phase predictions, with held-out evaluation on blind scoring frames.
 
 **Group:** Jim Daou, Stephen Gancayco, Kelly Tran, Samuel Whitney
 **Repository:** https://github.com/kellytran969/T1-Stallion-Biomechanics
-**Submitted revision:** 3a06f2a (update this line to the final packaging
-commit if more commits land before the ZIP is built)
+**Submitted revision:** 96b746a (the code state in the submission ZIP;
+the commit that sets this line sits directly on top of it and changes
+nothing else)
 
 ## Pipeline
 
