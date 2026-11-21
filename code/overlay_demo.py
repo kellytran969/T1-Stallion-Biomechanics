@@ -65,14 +65,17 @@ def load_endpoints(path):
         return out
     with open(path, newline="") as f:
         for row in csv.DictReader(f):
-            def val(key):
-                v = (row.get(key) or "").strip()
-                return float(v) if v else None
+            def val(*keys):
+                for key in keys:
+                    v = (row.get(key) or "").strip()
+                    if v:
+                        return float(v)
+                return None
             out[int(row["frame"])] = {
-                "theta_back_deg": val("theta_back_deg"),
-                "theta_neck_deg": val("theta_neck_deg"),
-                "hind_norm": val("hind_norm"),
-                "chest_norm": val("chest_norm"),
+                "theta_back_deg": val("theta_back_deg", "back_angle"),
+                "theta_neck_deg": val("theta_neck_deg", "neck_angle"),
+                "hind_norm": val("hind_norm", "hind_position"),
+                "chest_norm": val("chest_norm", "chest_position"),
             }
     return out
 
