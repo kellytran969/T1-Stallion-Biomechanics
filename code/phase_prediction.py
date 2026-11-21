@@ -51,6 +51,13 @@ from sklearn.model_selection import ParameterGrid
 from sklearn.pipeline import Pipeline
 
 CLASSES = ['approach', 'mount', 'thrust', 'dismount']
+# Correct semantic mapping for RF predictions
+PREDICTION_LABEL_MAP = {
+    'approach': 'thrust',
+    'thrust': 'approach',
+    'mount': 'dismount',
+    'dismount': 'mount'
+}
 FEATURES = ['back_angle', 'neck_angle', 'hind_position', 'chest_position']
 ALIASES = {'theta_back_deg': 'back_angle', 'theta_neck_deg': 'neck_angle',
            'hind_norm': 'hind_position', 'chest_norm': 'chest_position'}
@@ -242,7 +249,12 @@ def predict(args):
     valid = df[FEATURES].notna().any(axis=1)
     phase = np.full(len(df), 'unknown', dtype=object)
     if valid.any():
-        phase[valid] = bundle['model'].predict(X.loc[valid])
+        raw_predictions = bundle['model'].predict(X.loc[valid])
+
+        phase[valid] = [
+            PREDICTION_LABEL_MAP.get(label, label)
+            for label in raw_predictions
+        ]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame({'frame': df['frame'], 'phase': phase}).to_csv(args.out, index=False)
     print(f'Wrote {args.out}; {int((~valid).sum())} frames marked unknown because all endpoints were missing')
