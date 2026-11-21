@@ -1,0 +1,52 @@
+{
+  "example_only": false,
+  "lag_frames": 1,
+  "note": "Endpoints-only baseline rules fitted on training data (other excluded; approach prioritized) and checked on validation data before held-out comparison.",
+  "rules": [
+    {
+      "phase": "approach",
+      "all": [
+        {
+          "feature": "back_angle",
+          "op": ">",
+          "value": -12.0
+        }
+      ]
+    },
+    {
+      "phase": "mount",
+      "all": [
+        {
+          "feature": "hind_position",
+          "op": ">",
+          "value": -0.45
+        }
+      ]
+    },
+    {
+      "phase": "dismount",
+      "all": [
+        {
+          "feature": "neck_angle",
+          "op": "<",
+          "value": -33.0
+        },
+        {
+          "feature": "hind_position",
+          "op": ">",
+          "value": -0.7
+        }
+      ]
+    },
+    {
+      "phase": "thrust",
+      "all": [
+        {
+          "feature": "back_angle",
+          "op": "<=",
+          "value": -12.0
+        }
+      ]
+    }
+  ]
+}

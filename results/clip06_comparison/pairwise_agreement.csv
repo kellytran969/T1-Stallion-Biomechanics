@@ -1,0 +1,4 @@
+model_a,model_b,frames_compared,matching_frames,agreement_percentage
+rule_based,pose_only_rf,1254,5,0.39872408293460926
+rule_based,temporal_rf,1254,5,0.39872408293460926
+pose_only_rf,temporal_rf,1279,1248,97.57623143080532

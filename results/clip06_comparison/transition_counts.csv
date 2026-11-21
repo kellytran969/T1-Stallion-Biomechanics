@@ -1,0 +1,13 @@
+model,from_phase,to_phase,count
+pose_only_rf,approach,mount,2
+pose_only_rf,approach,thrust,1
+pose_only_rf,mount,approach,1
+pose_only_rf,thrust,approach,2
+rule_based,approach,mount,1
+rule_based,thrust,dismount,1
+temporal_rf,approach,dismount,1
+temporal_rf,approach,mount,1
+temporal_rf,approach,thrust,1
+temporal_rf,dismount,thrust,1
+temporal_rf,mount,approach,1
+temporal_rf,thrust,approach,2
