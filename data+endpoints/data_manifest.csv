@@ -1,7 +1,6 @@
-clip_id,horse_id,video_source,start_time,end_time,fps,width,height,split,endpoints_frozen,endpoints_tto,phase labels
-clip-01,horse-01,https://mediahub.unl.edu/media/22826,83,100,29.97,1280,720,training,,,clip-01_phases.csv
-clip-02,horse-02,https://www.youtube.com/watch?v=JdhKsA-T8Lc,49,70,30,640,480,training,,,clip-02_phases.csv
-clip-03,horse-03,https://www.youtube.com/watch?v=m15Yi0Wf52o,0,14,30,1280,720,development,,,clip-03_phases.csv
-clip-04,horse-04,https://www.youtube.com/watch?v=W1k4gj4QdwU,7,45,30,640,480,backup,,,
-clip-06,horse-06,https://portall.zp.ua/video/horse-mating-with-phantom-vagina-sperm-collection-from-stallion/id-YPnk612DSAp.html,0,46.6,30,1470,822,held-out test,,,clip-06_phases.csv
-clip-07,horse-07,https://www.youtube.com/watch?v=_ddgBsQvjSI,0,31.88,30,1720,1056,training,,,clip-07_phases.csv
+clip_id,horse_id,video_source,start_time,end_time,fps,width,height,split,phase labels
+clip-01,horse-01,https://mediahub.unl.edu/media/22826,83,100,29.97,1280,720,training,clip-01_phases.csv
+clip-02,horse-02,https://www.youtube.com/watch?v=JdhKsA-T8Lc,49,70,30,640,480,training,clip-02_phases.csv
+clip-03,horse-03,https://www.youtube.com/watch?v=m15Yi0Wf52o,0,14,30,1280,720,development,clip-03_phases.csv
+clip-06,horse-06,https://portall.zp.ua/video/horse-mating-with-phantom-vagina-sperm-collection-from-stallion/id-YPnk612DSAp.html,0,46.6,30,1470,822,held-out test,clip-06_phases.csv
+clip-07,horse-07,https://www.youtube.com/watch?v=_ddgBsQvjSI,0,31.88,30,1720,1056,training,clip-07_phases.csv
