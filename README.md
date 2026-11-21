@@ -111,7 +111,7 @@ clips:**
 
 | Clip | Frozen | TTO | Notes |
 |---|---|---|---|
-| clip-01 (1280x720) | 36.9 (median 30.9) | not run yet | Side profile, mounted throughout |
+| clip-01 (1280x720) | 36.9 (median 30.9) | 14.9 (median 10.4) | Side profile, mounted throughout; TTO cuts the mean error by 60%, coverage 90% to 95% |
 | clip-02 (640x480) | 24.4 (median 22.6) | 13.6 (median 8.8) | TTO cuts the mean error by 44%; coverage 88% to 98% |
 | clip-03 (640x360) | 40.2 (median 25.0) | 30.3 (median 9.9) | Smallest horse in frame of the five clips |
 | clip-07 (1720x1056) | 99.2 (median 72.9) | 63.8 (median 31.7) | TTO also raises visible-point coverage from 23% to 94% |
