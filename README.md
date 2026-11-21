@@ -155,7 +155,8 @@ here rather than hidden.
   phase predictions, in `data/<clip>/` and `results/`
 - `demo/clip-07_overlay.mp4`: processed clip-07 with tracked landmarks,
   live endpoint measurements, and phase banner
-- Execution screen recording: results/phase_prediction_screen_recording.mp4
+- Phase prediction execution screen recording: results/phase_prediction_screen_recording.mp4
+- PosePAL execution screen recording: results/posepal_execution_screen_recording.mp4
 
 ## Hardware and runtime
 
