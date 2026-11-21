@@ -105,12 +105,21 @@ Video sources for clips 01 to 03 are also cited in the report.
 
 ## Results (verified against the blind scoring annotations)
 
-**Tracking, delta_avg in pixels (lower is better):**
+**Tracking, delta_avg in pixels (lower is better). Pixel errors scale
+with frame size, so compare frozen vs TTO within a clip, not across
+clips:**
 
 | Clip | Frozen | TTO | Notes |
 |---|---|---|---|
-| clip-07 | 99.2 (median 72.9) | 63.8 (median 31.7) | TTO also raises visible-point coverage from 23% to 94% |
-| clip-06 | 165.2 | 181.5 (median 103.3) | Failure case: head, back, and dummy corners track well (11 to 65 px), but all leg keypoints are lost (290 to 450 px) after the camera cut at frame 90 and during the rear-view thrust |
+| clip-01 (1280x720) | 36.9 (median 30.9) | not run yet | Side profile, mounted throughout |
+| clip-02 (640x480) | 24.4 (median 22.6) | 13.6 (median 8.8) | TTO cuts the mean error by 44%; coverage 88% to 98% |
+| clip-03 (640x360) | 40.2 (median 25.0) | 30.3 (median 9.9) | Smallest horse in frame of the five clips |
+| clip-07 (1720x1056) | 99.2 (median 72.9) | 63.8 (median 31.7) | TTO also raises visible-point coverage from 23% to 94% |
+| clip-06 (1470x822) | 165.2 | 181.5 (median 103.3) | Failure case: head, back, and dummy corners track well (11 to 65 px), but all leg keypoints are lost (290 to 450 px) after the camera cut at frame 90 and during the rear-view thrust |
+
+On the three side-profile clips (01 to 03) and on clip-07, TTO improves
+on the frozen baseline in both error and coverage. Clip-06 is the one
+failure case, and it is the only clip with a mid-clip camera cut.
 
 **Endpoints on clip-07 (from TTO tracks):** back and neck angles present
 in 930 of 941 frames, chest position in 910, hind position in 836.
