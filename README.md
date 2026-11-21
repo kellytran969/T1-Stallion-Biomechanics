@@ -155,7 +155,7 @@ here rather than hidden.
   phase predictions, in `data/<clip>/` and `results/`
 - `demo/clip-07_overlay.mp4`: processed clip-07 with tracked landmarks,
   live endpoint measurements, and phase banner
-- Execution screen recording: TODO, file name (added at packaging)
+- Execution screen recording: results/phase_prediction_screen_recording.mp4
 
 ## Hardware and runtime
 
@@ -163,7 +163,8 @@ here rather than hidden.
   RTX A6000.
 - This group: tracking runs were executed on a Windows workstation
   (Intel CPU, 64 GB RAM, NVIDIA GeForce RTX GPU). Exact GPU model and
-  per-clip runtimes: TODO (Stephen).
+  per-clip runtimes: CPU-Intel Core Ultra 9 275HX, RAM-64GB DDR5 5600 MT/s SODIMM, GPU-NVIDIA GeForce RTX 5080 Laptop GPU
+  Roughly 30 minutes per clip for TTO endpoint calculations
 
 ## Known limitations
 
